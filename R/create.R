@@ -34,6 +34,7 @@
 #'
 #' }
 #' @export
+library(DBI)
 rs_create_table = function(
     df,
     dbcon,
@@ -60,7 +61,13 @@ rs_create_table = function(
   tableSchema = rs_create_statement(df, table_name = table_name, sortkeys=sortkeys,
   sortkey_style = sortkey_style, distkey=distkey, distkey_style = distkey_style,
   compression = compression)
-
+  queryStmt = function(dbcon, query){
+     if(inherits(dbcon, 'JDBCConnection')){
+         RJDBC::dbSendUpdate(dbcon, query)
+     }else{
+         dbExecute(dbcon, query)
+     }
+ }
   queryStmt(dbcon, tableSchema)
 
   return(rs_replace_table(df, dbcon, table_name, split_files, bucket, region, access_key, secret_key, session_token, iam_role_arn, wlm_slots, additional_params))
